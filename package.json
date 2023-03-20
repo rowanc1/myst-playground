@@ -1,0 +1,31 @@
+{
+  "name": "myst-playground",
+  "private": true,
+  "version": "0.0.0",
+  "description": "A template for playing around with some myst stuff!",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf dist",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:html": "esbuild html.ts --bundle --platform=node --outfile=dist/html.js",
+    "build:demo": "esbuild demo.ts --bundle --platform=node --outfile=dist/demo.js",
+    "build": "npm-run-all -l clean -p build:demo build:html",
+    "html": "node dist/html.js",
+    "demo": "node dist/demo.js"
+  },
+  "author": "Rowan Cockett <rowan@curvenote.com>",
+  "license": "MIT",
+  "dependencies": {
+    "myst-parser": "^0.0.22",
+    "myst-to-html": "^0.0.22",
+    "myst-to-jats": "^0.0.19",
+    "myst-to-tex": "^0.0.20",
+    "rehype-stringify": "^9.0.3",
+    "unified": "^10.1.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.17.12",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^4.4.0"
+  }
+}
