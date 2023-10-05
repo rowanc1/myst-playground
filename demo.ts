@@ -3,6 +3,7 @@ import { unified } from 'unified';
 import { VFile } from 'vfile';
 import yaml from 'js-yaml';
 import { mystParse } from 'myst-parser';
+import { SourceFileKind } from 'myst-spec-ext';
 import { validatePageFrontmatter } from 'myst-frontmatter';
 import type { PageFrontmatter } from 'myst-frontmatter';
 import {
@@ -24,7 +25,6 @@ import mystToTex from 'myst-to-tex';
 import mystToJats from 'myst-to-jats';
 import { mystToHtml } from 'myst-to-html';
 import type { LatexResult } from 'myst-to-tex';
-import type { JatsResult } from 'myst-to-jats';
 
 async function parse(text: string, defaultFrontmatter?: PageFrontmatter) {
   // Ensure that any imports from myst are async and scoped to this function
@@ -50,9 +50,8 @@ async function parse(text: string, defaultFrontmatter?: PageFrontmatter) {
   const htmlString = mystToHtml(mdastPre);
   const references = {
     cite: { order: [], data: {} },
-    footnotes: {},
   };
-  const { frontmatter: frontmatterRaw } = getFrontmatter(mdast, {
+  const { frontmatter: frontmatterRaw } = getFrontmatter(file, mdast, {
     removeYaml: true,
     removeHeading: false,
   });
@@ -69,7 +68,7 @@ async function parse(text: string, defaultFrontmatter?: PageFrontmatter) {
     .use(mathPlugin, { macros: frontmatter?.math ?? {} }) // This must happen before enumeration, as it can add labels
     .use(enumerateTargetsPlugin, { state })
     .use(linksPlugin, { transformers: linkTransforms })
-    .use(footnotesPlugin, { references })
+    .use(footnotesPlugin)
     .use(resolveReferencesPlugin, { state })
     .use(keysPlugin)
     .runSync(mdast as any, file);
@@ -79,8 +78,8 @@ async function parse(text: string, defaultFrontmatter?: PageFrontmatter) {
     .stringify(mdast as any, texFile).result as LatexResult;
   const jatsFile = new VFile();
   const jats = unified()
-    .use(mystToJats, { spaces: 2 })
-    .stringify(mdast as any, jatsFile).result as JatsResult;
+    .use(mystToJats, SourceFileKind.Article)
+    .stringify(mdast as any, jatsFile).result as string;
   return {
     frontmatter,
     yaml: mdastString,
@@ -88,7 +87,7 @@ async function parse(text: string, defaultFrontmatter?: PageFrontmatter) {
     html: htmlString,
     tex: tex.value,
     texWarnings: texFile.messages,
-    jats: jats.value,
+    jats,
     jatsWarnings: jatsFile.messages,
     warnings: file.messages,
   };
